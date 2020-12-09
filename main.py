@@ -12,25 +12,17 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 df1 = pd.read_csv('./LAPS.csv')
+
 df2 = pd.read_csv('./GRID.csv')
+
+df3 = pd.read_csv('./SC.csv')
+
 df = df1.append(df2, ignore_index=True)
+
 df.sort_values(by=['lap'], inplace=True)
-##df = df.query('raceId >= 1000')
 
 
 trace_list = []
-colors_list = ['#FD3216', '#00FE35', '#6A76FC', '#FED4C4', '#FE00CE', '#0DF9FF', '#F6F926',
-               '#FF9616', '#479B55', '#EEA6FB', '#DC587D', '#D626FF', '#6E899C', '#00B5F7',
-               '#B68E00', '#C9FBE5', '#FF0092', '#22FFA7', '#E3EE9E', '#86CE00', '#BC7196',
-               '#7E7DCD', '#FC6955', '#E48F72', '#FD3216', '#00FE35', '#6A76FC', '#FED4C4', '#FE00CE', '#0DF9FF',
-               '#F6F926',
-               '#FF9616', '#479B55', '#EEA6FB', '#DC587D', '#D626FF', '#6E899C', '#00B5F7',
-               '#B68E00', '#C9FBE5', '#FF0092', '#22FFA7', '#E3EE9E', '#86CE00', '#BC7196',
-               '#7E7DCD', '#FC6955', '#E48F72', '#FD3216', '#00FE35', '#6A76FC', '#FED4C4', '#FE00CE', '#0DF9FF',
-               '#F6F926',
-               '#FF9616', '#479B55', '#EEA6FB', '#DC587D', '#D626FF', '#6E899C', '#00B5F7',
-               '#B68E00', '#C9FBE5', '#FF0092', '#22FFA7', '#E3EE9E', '#86CE00', '#BC7196',
-               '#7E7DCD', '#FC6955', '#E48F72']
 season_list = df['year'].sort_values().unique()
 race_list = df['raceId'].sort_values().unique()
 gp_list = df['name'].unique()
@@ -141,7 +133,6 @@ def update_div(selected1, selected2):
     race_name = df.loc[df['raceId'] == selected2, 'name'].min()
     race_round = df.loc[df['raceId'] == selected2, 'round'].min()
     circuit_name = df.loc[df['raceId'] == selected2, 'Circuit_name'].min()
-    circuit_name = df.loc[df['raceId'] == selected2, 'Circuit_name'].min()
     location_name = df.loc[df['raceId'] == selected2, 'location'].min()
     country_name = df.loc[df['raceId'] == selected2, 'country'].min()
     date_ofrace = df.loc[df['raceId'] == selected2, 'date'].min()
@@ -167,8 +158,9 @@ def gp_list(typ, race, seas):
         }
         df_updated = df.query(f'year == {seas}')
         df_byrace = df_updated.query(f'raceId == {race}')
+        df3_byrace = df3.query(f'raceId == {race}')
         lap_list = []
-        lap_list = df_byrace['lap'].unique()
+        lap_list = df_byrace['lap'].sort_values().unique()
         fig_dict['layout'] = go.Layout(
             xaxis={'showgrid': False,
                    'zeroline': False,
@@ -249,21 +241,36 @@ def gp_list(typ, race, seas):
         lap = 0
         i = -1
 
+        df3_bylap=df3_byrace[df3_byrace['lap'] == lap]
+        data_dict0 = go.Scatter(
+            x=df3_bylap.lap,
+            y=df3_bylap.position,
+            mode='markers',
+            marker={'line_width': 0, 'size': 8, 'color': 'orange', 'symbol': 'diamond'},
+            name=df3_byrace.code.min(),
+            showlegend=True
+                    )
+
+        fig_dict['data'].append(data_dict0)
+
+
         driver_list = df_byrace['driverId'].unique()
+
         for driver in driver_list:
             i = i + 1
-            c = colors_list[i]
             df_bylap = df_byrace[df_byrace['lap'] == lap]
             df_bylap2 = df_byrace[df_byrace['lap'] <= lap]
             df_bylap_anddriver = df_bylap[df_bylap['driverId'] == driver]
             df_bylap_anddriver2 = df_bylap2[df_bylap2['driverId'] == driver]
+            c = df_bylap_anddriver2['team_color'].min()
+
             data_dict2 = {
                 'x': list(df_bylap_anddriver2['lap']),
                 'y': list(df_bylap_anddriver2['position']),
                 'mode': 'lines',
-                'line': {'width': 3, 'color': c},
+                'line': {'width': 2, 'color': c,'dash':df_bylap_anddriver2['line_type'].min()},
                 'name': df_bylap_anddriver2['code'].min(),
-                'hovertemplate': df_bylap_anddriver2.driver.min() + ' (' + df_bylap_anddriver2.team.min() + ')' +
+                'hovertemplate': str(df_bylap_anddriver2.driver.min()) + ' (' + str(df_bylap_anddriver2.team.min()) + ')' +
                                  '<br>Lap: %{x}' +
                                  '<br>Positon: %{y}'
             }
@@ -275,9 +282,9 @@ def gp_list(typ, race, seas):
                 'name': df_bylap_anddriver['code'].min(),
                 'text': df_bylap_anddriver['code'].min(),
                 'textposition': 'middle right',
-                'marker': {'color': c, 'size': 10},
+                'marker': {'color': c, 'size': 8},
                 'showlegend': False,
-                'hovertemplate': df_bylap_anddriver2.driver.min() + ' (' + df_bylap_anddriver2.team.min() + ')' +
+                'hovertemplate': str(df_bylap_anddriver2.driver.min()) + ' (' + str(df_bylap_anddriver2.team.min()) + ')' +
                                  '<br>Lap: %{x}' +
                                  '<br>Positon: %{y}'
             }
@@ -288,6 +295,15 @@ def gp_list(typ, race, seas):
         for lap in lap_list:
             frame = {'data': [], 'name': str(lap)}
             driver_list = df_byrace['driverId'].unique()
+            df3_bylap = df3_byrace[df3_byrace['lap'] <= lap]
+            data_dict0 = {
+                'x': list(df3_bylap['lap']),
+                'y': list(df3_bylap['position']),
+                'mode': 'markers',
+                'showlegend': True
+                         }
+            frame['data'].append(data_dict0)
+
             for driver in driver_list:
                 df_bylap = df_byrace[df_byrace['lap'] == lap]
                 df_bylap2 = df_byrace[df_byrace['lap'] <= lap]
@@ -414,6 +430,8 @@ def gp_list(typ, race, seas):
         lap = 0
         i = -1
 
+
+
         for driver in driver_list:
             i = i + 1
             c = colors_list[i]
@@ -426,7 +444,7 @@ def gp_list(typ, race, seas):
                 'name': df_bylap_anddriver['code'].min(),
                 'text': df_bylap_anddriver['code'].min(),
                 'textposition': 'middle right',
-                'marker': {'color': c, 'size': 10},
+                'marker': {'color': df_bylap_and_driver['team_color'].min(), 'size': 10},
                 'showlegend': False
             }
             fig_dict2['data'].append(data_dict)
@@ -475,11 +493,18 @@ def gp_list(typ, race, seas):
             'frames': []
         }
 
+        df_updated = df.query(f'year == {seas}')
+        df_byrace = df_updated.query(f'raceId == {race}')
+        df3_byrace = df3.query(f'raceId == {race}')
+        driver_list = df_byrace['driverId'].sort_values().unique()
+        lap_list = df_byrace['lap'].sort_values().unique()
+
         fig_dict3['layout'] = go.Layout(
             xaxis={'showgrid': False,
                    'zeroline': False,
                    'ticks': 'inside',
-                   'tickcolor': 'white'},
+                   'tickcolor': 'white',
+                   'range': [-3, lap_list.max() + 3]},
             yaxis={'showgrid': False,
                    'zeroline': False,
                    'autorange': 'reversed',
@@ -497,18 +522,31 @@ def gp_list(typ, race, seas):
                         'color': 'white'})
 
         z = -1
-        df_updated = df.query(f'year == {seas}')
-        df_byrace = df_updated.query(f'raceId == {race}')
-        driver_list = df_byrace['driverId'].unique()
+
+        trace0 = go.Scatter(
+            x=df3_byrace.lap,
+            y=df3_byrace.position,
+            mode='markers',
+            name=df3_byrace.code.min(),
+            line={'width': 2, 'dash': df3_byrace['line_type'].min()},
+            marker={'line_width': 0, 'size': 8, 'color': 'orange','symbol':'diamond'},
+            textposition='middle right',
+
+        )
+        fig_dict3['data'].append(trace0)
+
         for i in driver_list:
             z = z + 1
             df_trace = df_byrace[df_byrace['driverId'] == i]
+            c = df_trace['team_color'].min()
+            driver_lap_max = df_trace['lap'].max()
             trace = go.Scatter(
                 x=df_trace.lap,
                 y=df_trace.position,
-                mode='markers+lines',
+                mode='lines',
                 name=df_trace.code.min(),
-                marker={'line_width': 0, 'size': 5, 'color': colors_list[z]},
+                line={'width':2,'dash':df_trace['line_type'].min()},
+                marker={'line_width': 0, 'size': 8, 'color': c},
                 text=df_trace.code.min(),
                 textposition='middle right',
                 hovertemplate=
@@ -518,6 +556,41 @@ def gp_list(typ, race, seas):
 
             )
             fig_dict3['data'].append(trace)
+            df_trace2 = df_trace[df_trace['lap'] == 0]
+            trace2 = go.Scatter(
+                x=df_trace2.lap,
+                y=df_trace2.position,
+                mode='markers+text',
+                name=df_trace2.code.min(),
+                marker={'line_width': 0, 'size': 8, 'color': c},
+                text=df_trace2.code.min(),
+                textposition='middle left',
+                showlegend=False,
+                hovertemplate=
+                str(df_trace2.driver.min()) + ' (' + str(df_trace2.team.min()) + ')' +
+                '<br>Lap: %{x}' +
+                '<br>Positon: %{y}'
+
+            )
+            fig_dict3['data'].append(trace2)
+
+            df_trace3 = df_trace[df_trace['lap'] == driver_lap_max]
+            trace3 = go.Scatter(
+                x=df_trace3.lap,
+                y=df_trace3.position,
+                mode='markers+text',
+                name=df_trace3.code.min(),
+                marker={'line_width': 0, 'size': 8, 'color': c},
+                text=df_trace3.code.min(),
+                textposition='middle right',
+                showlegend= False,
+                hovertemplate=
+                str(df_trace3.driver.min()) + ' (' + str(df_trace3.team.min()) + ')' +
+                '<br>Lap: %{x}' +
+                '<br>Positon: %{y}'
+
+            )
+            fig_dict3['data'].append(trace3)
 
         return go.Figure(fig_dict3)
 
