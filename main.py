@@ -49,14 +49,14 @@ app.layout = html.Center(html.Div([
                 {'label': 'Season ' + str(c), 'value': c} for c in season_list
             ],
             value=df['year'].max(),
-            style={'textAlign':'left'}
+            style={'textAlign': 'left'}
         ),
 
         html.Br(),
 
         dcc.Dropdown(
             id='dropdown-2',
-            style={'textAlign':'left'},
+            style={'textAlign': 'left'},
             options=[
                 {'label': df.loc[df['raceId'] == r, 'name'].min() + ' (round ' + str(
                     df.loc[df['raceId'] == r, 'round'].min()) + ')'
@@ -65,13 +65,13 @@ app.layout = html.Center(html.Div([
             placeholder='Choose race...',
             value=df['raceId'].max()
         )],
-        style={'width': '40%','verticalAlign':'middle'}),
+        style={'width': '40%', 'verticalAlign': 'middle'}),
 
     html.Br(),
 
-    html.Div(
-        id='Div1'
-    ),
+    html.Div(id='Div1',
+             style={'font-size': 24}
+             ),
 
     html.Br(),
 
@@ -147,9 +147,7 @@ def update_div(selected1, selected2):
      ]
 )
 def gp_list(typ, race, seas):
-
     ##POSITION---------------------------------------------------------------------------------------------------
-
 
     if typ == 'tab1':
         fig_dict = {
@@ -188,8 +186,7 @@ def gp_list(typ, race, seas):
             legend_title_text='Click to show/hide traces',
             plot_bgcolor='#000000',
             paper_bgcolor='#1b1b1b',
-            title='F1 Grand Prix Timelapse - Position Changes',
-            title_font={'size': 32, 'color': 'white'},
+            margin={'t': 15, 'l': 15, 'r': 15, 'b': 15},
             updatemenus=[
                 {
                     "buttons": [
@@ -290,7 +287,6 @@ def gp_list(typ, race, seas):
             }
             fig_dict['data'].append(data_dict)
 
-
         ##frames- position changes
 
         for lap in lap_list:
@@ -342,11 +338,6 @@ def gp_list(typ, race, seas):
                 }
                 frame['data'].append(data_dict)
 
-
-
-
-
-
             fig_dict["frames"].append(frame)
             slider_step = {"args": [
                 [lap],
@@ -387,9 +378,10 @@ def gp_list(typ, race, seas):
                    'zerolinecolor': '#1b1b1b',
                    'ticks': 'inside',
                    'tickcolor': '#1b1b1b',
-                   'range': [avg_lap_time*2.1, -20],
-                   'tickvals': [0, avg_lap_time,avg_lap_time*2,avg_lap_time*2.1],
-                   'ticktext': [0,'+'+str(int(avg_lap_time))+'s (~+1LAP)','+'+str(int(2*avg_lap_time))+'s (~+2LAPs)',' ']
+                   'range': [avg_lap_time * 2.1, -20],
+                   'tickvals': [0, avg_lap_time, avg_lap_time * 2, avg_lap_time * 2.1],
+                   'ticktext': [0, '+' + str(int(avg_lap_time)) + 's (~+1LAP)',
+                                '+' + str(int(2 * avg_lap_time)) + 's (~+2LAPs)', ' ']
                    },
             yaxis={'showgrid': True,
                    'gridcolor': '#1b1b1b',
@@ -404,12 +396,11 @@ def gp_list(typ, race, seas):
             font={'color': 'white'},
             height=800,
             width=1400,
+            margin={'t': 15, 'l': 15, 'r': 15, 'b': 15},
             showlegend=True,
             legend_title_text='Click to show/hide traces',
             plot_bgcolor='#000000',
             paper_bgcolor='#1b1b1b',
-            title='F1 Grand Prix Timelapse - Time Changes',
-            title_font={'size': 32, 'color': 'white'},
             updatemenus=[
                 {
                     "buttons": [
@@ -603,12 +594,10 @@ def gp_list(typ, race, seas):
         font={'color': 'white'},
         height=800,
         width=1400,
+        margin={'t':15,'l':15,'r':15,'b':15},
         showlegend=True,
         plot_bgcolor='#000000',
-        paper_bgcolor='#1b1b1b',
-        title='F1 Grand Prix Timelapse - Static',
-        title_font={'size': 32,
-                    'color': 'white'})
+        paper_bgcolor='#1b1b1b')
 
     z = -1
 
@@ -692,7 +681,7 @@ def gp_list(typ, race, seas):
             mode='text',
             name=df_trace4.code.min(),
             marker={'line_width': 0, 'size': 8, 'color': c},
-            text='  '+str(df_trace4.code.min()) + ' +' + str(round(df_trace4['strata'].min(), 1)),
+            text='  ' + str(df_trace4.code.min()) + ' +' + str(round(df_trace4['strata'].min(), 1)),
             textposition='middle right',
             showlegend=False,
             hovertemplate=
